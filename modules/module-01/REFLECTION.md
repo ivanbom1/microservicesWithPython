@@ -60,6 +60,8 @@ No need to solve it: just name it honestly. This is exactly the tension the rest
 
 > _Your answer:_
 
+Debugging. In a monolith, a failed request has one stack trace in one place. In this system, a request touches the gateway, auth-service, activity-service, and RabbitMQ before anything is logged — if something breaks, the error could be anywhere across five separate logs.
+
 ---
 
 _Keep this file. You will refer back to it during the oral presentation._
