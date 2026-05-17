@@ -58,6 +58,21 @@ Protocol: RabbitMQ message (async — why not REST here?)
 Payload: { activity_id, user_id, action, game_id, timestamp }
 ```
 
+```
+activity-service → user-service //completely optional and unnecessary since gateway validated JWT 
+Trigger: validating a user exists before recording activity
+Protocol: REST (internal HTTP, M2M token)
+Payload: Authorization: Bearer <m2m_token>
+```
+
+```
+activity-service → notification-service
+Trigger: activity occurs
+Protocol: RabbitMQ (async)
+Payload: { user_id, friend_id, action, game_id, action, timestamp }
+```
+
+
 Focus on the flows that feel non-obvious. You do not need to document every possible pair.
 
 ---
