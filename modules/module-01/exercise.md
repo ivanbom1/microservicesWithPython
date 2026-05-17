@@ -98,8 +98,16 @@ This can be a sketch on paper, a whiteboard photo, or ASCII art committed to you
 Three questions to discuss as a team before you leave:
 
 1. Why does `notification-service` use Node.js instead of Python like the rest? What does that tell you about microservices and technology choices?
+
+Node.js is an ideal choice for this since it is designed to effectively manage a large number of minor events, such as listening for messages and forwarding notifications. Python is a heavier runtime for a lightweight service that only listens and forwards — Node.js starts faster and has lower memory overhead for this kind of thin, I/O-bound workload. The language selection is entirely transparent to the rest of the system. Services do not exchange code, instead, they interact with each other via defined message formats. This implies that each service may choose the technology that suits best.
+
 2. What is the risk of `activity-service` calling `logging-service` synchronously — why might you prefer an async event instead?
+
+If logging-service is overwhelmed or down, activity-service blocks and fails. However logging failure should never break core functionality. Async via RabbitMQ decouples them: activity-service fires and forgets, and logging-service processes when it can.
+
 3. Why does `logging-service` need a GDPR consent check before recording any activity?
+
+Because GDPR requires user consent before collecting personal data. Recording what a user does ties actions to an identity is considered as personal data.
 
 You do not need to write these answers down — they are warm-up for your REFLECTION.md.
 
