@@ -26,11 +26,15 @@ A bounded context is a part of the system that has a clear responsibility and ow
 
 For each bounded context you identify, fill in the table:
 
-| Bounded Context | Responsibilities                                         | Owned Entities | Team        |
-| --------------- | -------------------------------------------------------- | -------------- | ----------- |
-| Identity        | Manages who users are, handles registration and profiles | User, Session  | Platform    |
-| Game Library    | _(fill in)_                                              | _(fill in)_    | _(fill in)_ |
-| _(add more)_    |                                                          |                |             |
+| Bounded Context  | Responsibilities                                                                 | Owned Entities              | Team           |
+| ---------------- | -------------------------------------------------------------------------------- | --------------------------- | -------------- | 
+| Identity         | Manages who users are, handles registration and profiles                         | User, Session               | Platform       |
+| Game Library     | Manages games list and details, handles games registration                       | Game                        | Content        |
+| Activity Service | Tracks user actions and gamming sessions in the system                           | Activity, GameSession       | Entertainement |
+| Auth Service     | JWT access token creation and validation for users                               | AccessToken                 | Platform       |
+| Logging Service  | Manages GDPR consent preferences, stores activity records for legal traceability | ActivityLogs, ConsentRecord | Legal          |
+| Notifications    | Delivers updates on users actions or activities to other users                   | Notification                | Entertainement |
+
 
 There is no single correct answer: what matters is that you can justify each row.
 
