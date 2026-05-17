@@ -24,6 +24,12 @@ Think about it from three angles: the developer who has to change code, the team
 
 > _Your answer:_
 
+Developer: each service has a single responsibility and a clear boundary — you know exactly where the logging code lives, what it owns, and what it doesn't touch. Adding a new feature to logging-service doesn't require reading auth or game code first.
+
+Deployment team: services can be scaled independently — if activity-service is under heavy load, you spin up more instances of just that service without touching the others. You can also roll back one service without rolling back the entire system.
+
+User: if logging-service crashes, they can still browse games and log in — only activity tracking is affected, not the whole experience.
+
 ---
 
 ## 2. Your choice
@@ -35,6 +41,12 @@ Look at your service map. Every arrow between two services is a decision someone
 What would break, slow down, or become harder to manage if you merged those two services back together?
 
 > _Your answer:_
+
+activity-service -> logging-service.
+
+The line exists because consent and legal compliance is a separate concern from tracking what users do. Activity-service records events; logging-service decides whether it's even legal to store them.
+If merged: changing GDPR consent logic means touching the same codebase as activity tracking. One team owns legal compliance, another owns product analytics and merging them forces two teams to work in the same service. And this is a bad practice because they would be stepping on each other's changes, causing merge conflicts, and needing to coordinate deployments for unrelated reasons, etc.
+
 
 ---
 
