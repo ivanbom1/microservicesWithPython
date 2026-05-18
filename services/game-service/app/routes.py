@@ -10,18 +10,28 @@
 # If /{game_id} comes first, FastAPI will try to match "search" as an ID
 # and return a 422 Unprocessable Entity error.
 
-from fastapi import APIRouter                             
-                                                                                                                  
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app import service
+from app.schemas import GameCreate, GameOut, GameList
+
+
 router = APIRouter(prefix="/v1/game", tags=["game"])
-                                                                                                                  
-@router.post("/", status_code=201)                        
-def create_user():
-    return {"message": "create game — not implemented yet"}
-                                                                                                                  
-@router.get("/")
-def list_users():                                                                                               
-    return {"items": [], "total": 0, "limit": 20, "offset": 0, "message": "games will be displayed here ..."}
-                                                                                                                  
-@router.get("/{game_id}")
-def get_user(game_id: str):                                                                                     
-    return {"message": f"get game {game_id} — not implemented yet"}   
+
+@router.post("/", response_model=GameOut, status_code=201)
+def create_game(data: GameCreate, db: Session = Depends(get_db)):
+    return service.add_game(db, data)
+
+
+@router.get("/", response_model=GameList)
+def list_games(limit: int = 20, offset: int = 0, db: Session = Depends(get_db)):
+    return service.fetch_all_games(db, limit=limit, offset=offset)
+
+
+@router.get("/{game_id}", response_model=GameOut)
+def get_game(game_id: str, db: Session = Depends(get_db)):
+    try:
+        return service.fetch_game(db, game_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
