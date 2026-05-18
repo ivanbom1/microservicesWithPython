@@ -19,7 +19,7 @@ from datetime import datetime, timezone
 import uuid
 from app.database import Base
 
-class User(Base):
+class Game(Base):
     __tablename__ = "games"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
