@@ -30,7 +30,7 @@ class GameOut(BaseModel):
 
     model_config = {"from_attributes": True}
 
-class UserList(BaseModel):
+class GameList(BaseModel):
     items: list[GameOut]
     total: int
     limit: int

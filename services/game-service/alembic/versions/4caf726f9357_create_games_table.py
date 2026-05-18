@@ -1,8 +1,8 @@
 """create games table
 
-Revision ID: c38e35af516d
+Revision ID: 4caf726f9357
 Revises: 
-Create Date: 2026-05-18 22:21:47.880748
+Create Date: 2026-05-18 23:03:38.435994
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'c38e35af516d'
+revision: str = '4caf726f9357'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -27,7 +27,7 @@ def upgrade() -> None:
     sa.Column('genre', sa.String(), nullable=False),
     sa.Column('platform', sa.String(), nullable=False),
     sa.Column('release_year', sa.Integer(), nullable=True),
-    sa.Column('cover_url', sa.Boolean(), nullable=True),
+    sa.Column('cover_url', sa.String(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('title')
