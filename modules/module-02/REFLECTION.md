@@ -20,6 +20,8 @@ Think about what happens six months later when someone new joins the team, or wh
 
 > *Your answer:*
 
+First of all, on arrival of a new developer it is much easier to get into the project codebase, understand the architecture of whole app and certain features. Also layered structure helps to debug ongoing features.
+
 ---
 
 ## 2. Your choice
@@ -31,6 +33,13 @@ Each service owns its data exclusively — no other service is allowed to touch 
 Give a concrete scenario, not a general principle.
 
 > *Your answer:*
+
+Game Service writes directly to users.created_at
+
+The Game Service needs to query "users who joined during this game's launch window." Instead of asking UserService, it just reads — fine. But then a developer thinks: "I'll sync the user's created_at to match the game's launch date for reporting cohorts.
+
+What breaks:
+UserService uses created_at to calculate account age for rate limiting so that new accounts can't post more than 5 reviews/day. User 42's real account age was 3 days. After the write, UserService sees 14 months and the rate limit no longer applies. User 42 spams reviews. Result -> UserService never knew its data changed. No validation, no event, no cache invalidation. The invariant broke silently.
 
 ---
 
@@ -44,6 +53,9 @@ And at what point does the complexity start to pay off? Where is the tipping poi
 
 > *Your answer:*
 
----
+Cost of all this structure is valuable time for possible unneeded layers. Simple systems with a few entities might be overwhelmed by all the layers where new features should be integrated. Add a new method and change 5 files is not efficient, and without a specific reason it wouldn't pay off.
+
+The main point is to create a clean, understadable, SECURE, and isolated architecture to combine multiple services used by Game Manager. The tipping point is security and isolation. Game service which uses multiple individual services to exist as a Web App, has to ensure that they play as an orchestra, not a chamber blues improvisational band.
+ 
 
 *Keep this file. You will refer back to it during the oral presentation.*
