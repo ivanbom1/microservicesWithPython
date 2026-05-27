@@ -80,40 +80,28 @@ async def proxy(request: Request, path: str):
 
         The full path must be forwarded as-is — no stripping, no rewriting.
         Reconstruct it with the leading slash:
-            target_url = f"{target_base}/{path}"
-
-        Forward using httpx, preserving method, headers, and body:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.request(
-                    method=request.method,
-                    url=target_url,
-                    headers=request.headers.raw,   # forward all original headers
-                    content=await request.body(),   # forward the body as-is
-                    params=request.query_params,    # forward query string
-                )
-
-        Return a FastAPI Response with the downstream status, headers, and body:
-            return Response(
-                content=response.content,
-                status_code=response.status_code,
-                headers=dict(response.headers),
-                media_type=response.headers.get("content-type"),
-            )
-
-    ---
-    Step 4 — Handle an unreachable downstream service.
-
-        Wrap the httpx call in a try/except for httpx.RequestError.
-        If the service cannot be reached, return:
-            Response(status_code=503, content="Service unavailable")
-
-    ---
-    Verify your implementation:
-        curl http://localhost:8000/health
-        curl http://localhost:8000/v1/users
-        curl http://localhost:8000/v1/games
-        curl http://localhost:8000/v1/activities
-        curl http://localhost:8000/v1/unknown   # should return 404
     """
-    # TODO: implement steps 1–4 above
-    raise NotImplementedError("implement the proxy forwarding logic")
+        
+    target_url = f"{target_base}/{path}"
+    
+    """
+        Forward using httpx, preserving method, headers, and body:
+    """ 
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.request(
+                method=request.method,
+                url=target_url,
+                headers=request.headers.raw,   # forward all original headers
+                content=await request.body(),   # forward the body as-is
+                params=request.query_params,    # forward query string
+            )
+        return Response(
+            content=response.content,
+            status_code=response.status_code,
+            headers=dict(response.headers),
+            media_type=response.headers.get("content-type"),
+        )
+        
+    except httpx.RequestError:
+        return Response(status_code=503, content="Service unavailable")
