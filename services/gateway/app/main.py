@@ -47,10 +47,12 @@ async def proxy(request: Request, path: str):
         The path arrives without the leading slash, e.g. "v1/users/123".
         Split it on "/" to get a list of segments:
     """
+    
     segments = path.split("/")
     
     if len(segments) < 2:
         return Response(status_code=404, content="NOT FOUND")
+    
     """
             # ["v1", "users", "123"]
 
@@ -61,10 +63,15 @@ async def proxy(request: Request, path: str):
 
     ---
     Step 2 — Look up the resource in ROUTES.
-
-        resource = segments[1]
-        target_base = ROUTES.get(resource)
-
+    """
+    
+    resource = segments[1]
+    target_base = ROUTES.get(resource)
+    
+    if target_base is None:
+        return Response(status_code=404, content=f"Unknown resource: {resource}")
+    
+    """
         If `resource` is not in ROUTES, return:
             Response(status_code=404, content=f"Unknown resource: {resource}")
 
