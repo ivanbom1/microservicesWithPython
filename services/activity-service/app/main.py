@@ -56,20 +56,25 @@ async def validate_user(user_id: str) -> None:
 
 
 async def fetch_game(game_id: str) -> dict | None:
+    
     """
     Fetch game data from game-service to enrich the activity response.
-
-    Call: GET {settings.game_service_url}/v1/games/{game_id}
-
-    Behaviour:
-    - 200  → return the response JSON as a dict
-    - Any non-2xx status OR network error → return None (do NOT raise)
-
-    This call is OPTIONAL — the activity is saved regardless of the result.
-    Graceful degradation is the goal: the response will include "game": null
-    when game-service is unreachable.
     """
-    raise NotImplementedError
+    
+    url = f"{settings.game_service_url}/v1/games/{game_id}"
+    
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            response = await client.get(url)
+        
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return None
+    
+    except httpx.RequestError:
+        return None
+    
 
 
 # ---------------------------------------------------------------------------
