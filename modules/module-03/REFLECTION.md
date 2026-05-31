@@ -20,6 +20,9 @@ Think about what the client would need to know and manage if it talked to each s
 
 > *Your answer:*
 
+A single entry point exists to decouple clients from the internal service. Without a gateway, client needs to:
+know hostname and port or each service, hardcode the endpoints, manage error responses for each service individually.
+
 ---
 
 ## 2. Your choice
@@ -30,7 +33,19 @@ The activity-service makes two outbound calls: one to validate the user (with re
 
 What is the consequence for the user in each case if the downstream service is unavailable?
 
+
 > *Your answer:*
+
+They're treated differently because of their role in the request:
+
+VALIDATE_USER() (retry + fail hard): This is a business rule. An activity cannot exist without a valid user. If this call fails, the request must fail immediately—the activity must not be saved. Retry once because network glitches shouldn't reject a valid user. If it still fails, the user genuinely doesn't exist or user-service is down; either way, reject.
+
+FETCH_GAME (graceful null fallback): This is enrichment only. The activity is valid and should be saved regardless. Game data is nice-to-have metadata. If game-service is slow or down, return the activity with "game": null and let the client see a partial response rather than fail the entire request.
+
+Consequences:
+
+Missing user -> activity creation rejected
+Missing game -> activity created, but game details are null
 
 ---
 
@@ -43,6 +58,8 @@ Every time a client creates an activity, three services are involved synchronous
 What happens to the user experience if the slowest service in the chain takes 3 seconds to respond?
 
 > *Your answer:*
+
+Systemic risk of chaining synchronous calls. This architecture creates a dependency chain all three services must be up and responsive simultaneously. The overall latency is the sum of all three calls.
 
 ---
 

@@ -26,11 +26,15 @@ A bounded context is a part of the system that has a clear responsibility and ow
 
 For each bounded context you identify, fill in the table:
 
-| Bounded Context | Responsibilities                                         | Owned Entities | Team        |
-| --------------- | -------------------------------------------------------- | -------------- | ----------- |
-| Identity        | Manages who users are, handles registration and profiles | User, Session  | Platform    |
-| Game Library    | _(fill in)_                                              | _(fill in)_    | _(fill in)_ |
-| _(add more)_    |                                                          |                |             |
+| Bounded Context  | Responsibilities                                                                 | Owned Entities              | Team           |
+| ---------------- | -------------------------------------------------------------------------------- | --------------------------- | -------------- | 
+| Identity         | Manages who users are, handles registration and profiles                         | User, Session               | Platform       |
+| Game Library     | Manages games list and details, handles games registration                       | Game                        | Content        |
+| Activity Service | Tracks user actions and gamming sessions in the system                           | Activity, GameSession       | Entertainement |
+| Auth Service     | JWT access token creation and validation for users                               | AccessToken                 | Platform       |
+| Logging Service  | Manages GDPR consent preferences, stores activity records for legal traceability | ActivityLogs, ConsentRecord | Legal          |
+| Notifications    | Delivers updates on users actions or activities to other users                   | Notification                | Entertainement |
+
 
 There is no single correct answer: what matters is that you can justify each row.
 
@@ -54,6 +58,21 @@ Protocol: RabbitMQ message (async — why not REST here?)
 Payload: { activity_id, user_id, action, game_id, timestamp }
 ```
 
+```
+activity-service → user-service //completely optional and unnecessary since gateway validated JWT 
+Trigger: validating a user exists before recording activity
+Protocol: REST (internal HTTP, M2M token)
+Payload: Authorization: Bearer <m2m_token>
+```
+
+```
+activity-service → notification-service
+Trigger: activity occurs
+Protocol: RabbitMQ (async)
+Payload: { user_id, friend_id, action, game_id, action, timestamp }
+```
+
+
 Focus on the flows that feel non-obvious. You do not need to document every possible pair.
 
 ---
@@ -69,6 +88,9 @@ Draw the full GameHub service map:
 
 This can be a sketch on paper, a whiteboard photo, or ASCII art committed to your branch.
 
+
+![service map](../../pictures/service_graph.jpg)
+
 ---
 
 ## Discussion _(~15 min)_
@@ -76,8 +98,16 @@ This can be a sketch on paper, a whiteboard photo, or ASCII art committed to you
 Three questions to discuss as a team before you leave:
 
 1. Why does `notification-service` use Node.js instead of Python like the rest? What does that tell you about microservices and technology choices?
+
+Node.js is an ideal choice for this since it is designed to effectively manage a large number of minor events, such as listening for messages and forwarding notifications. Python is a heavier runtime for a lightweight service that only listens and forwards — Node.js starts faster and has lower memory overhead for this kind of thin, I/O-bound workload. The language selection is entirely transparent to the rest of the system. Services do not exchange code, instead, they interact with each other via defined message formats. This implies that each service may choose the technology that suits best.
+
 2. What is the risk of `activity-service` calling `logging-service` synchronously — why might you prefer an async event instead?
+
+If logging-service is overwhelmed or down, activity-service blocks and fails. However logging failure should never break core functionality. Async via RabbitMQ decouples them: activity-service fires and forgets, and logging-service processes when it can.
+
 3. Why does `logging-service` need a GDPR consent check before recording any activity?
+
+Because GDPR requires user consent before collecting personal data. Recording what a user does ties actions to an identity is considered as personal data.
 
 You do not need to write these answers down — they are warm-up for your REFLECTION.md.
 

@@ -5,44 +5,96 @@ from app.config import settings
 
 app = FastAPI(title="gateway", version="1.0.0")
 
+# Routing table — maps the resource name in the URL path to the target service base URL.
+# Path structure: /{version}/{resource}/...
+#   e.g. GET /v1/users/123  →  resource = "users"  →  forward to user_service_url
+#
+# Add new entries here as each module introduces a new service.
+# Module 4 will add: "notifications"
+# Module 5 will add: "consent", "logs"
+# Module 6 will add: "auth"
 ROUTES: dict[str, str] = {
     "users":      settings.user_service_url,
     "games":      settings.game_service_url,
     "activities": settings.activity_service_url,
-    # Added in Module 4
-    # "notifications": settings.notification_service_url,
+    # "notifications": settings.notification_service_url,  # Added in Module 4
+    # "auth":          settings.auth_service_url,           # Added in Module 6
+    # "consent":       settings.logging_service_url,        # Added in Module 5
+    # "logs":          settings.logging_service_url,        # Added in Module 5
 }
 
 
 @app.get("/health")
 async def health():
+    """
+    Gateway liveness check. Handled here — never forwarded to a service.
+    In Module 10 this endpoint will be upgraded to fan out to all services
+    and return their individual status.
+    """
     return {"status": "ok", "service": "gateway"}
 
 
 @app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
 async def proxy(request: Request, path: str):
-    # Step 1 — parse the resource name from the path
+    """
+    Catch-all reverse proxy — forwards every request to the correct downstream service.
+
+    Your job: implement the forwarding logic described below.
+
+    ---
+    Step 1 — Parse the path to find the resource name.
+
+        The path arrives without the leading slash, e.g. "v1/users/123".
+        Split it on "/" to get a list of segments:
+    """
+    
     segments = path.split("/")
+    
     if len(segments) < 2:
-        return Response(status_code=404, content="Not found")
+        return Response(status_code=404, content="NOT FOUND")
+    
+    """
+            # ["v1", "users", "123"]
 
+        Index 0 is the version ("v1").
+        Index 1 is the resource ("users", "games", "activities", ...).
+
+        If the path has fewer than 2 segments, return a 404.
+
+    ---
+    Step 2 — Look up the resource in ROUTES.
+    """
+    
     resource = segments[1]
-
-    # Step 2 — look up the target service
     target_base = ROUTES.get(resource)
+    
     if target_base is None:
         return Response(status_code=404, content=f"Unknown resource: {resource}")
+    
+    """
+        If `resource` is not in ROUTES, return:
+            Response(status_code=404, content=f"Unknown resource: {resource}")
 
-    # Step 3 — forward the request
+    ---
+    Step 3 — Build the target URL and forward the request.
+
+        The full path must be forwarded as-is — no stripping, no rewriting.
+        Reconstruct it with the leading slash:
+    """
+        
     target_url = f"{target_base}/{path}"
+    
+    """
+        Forward using httpx, preserving method, headers, and body:
+    """ 
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.request(
                 method=request.method,
                 url=target_url,
-                headers=request.headers.raw,
-                content=await request.body(),
-                params=request.query_params,
+                headers=request.headers.raw,   # forward all original headers
+                content=await request.body(),   # forward the body as-is
+                params=request.query_params,    # forward query string
             )
         return Response(
             content=response.content,
@@ -50,6 +102,6 @@ async def proxy(request: Request, path: str):
             headers=dict(response.headers),
             media_type=response.headers.get("content-type"),
         )
-    # Step 4 — handle unreachable service
+        
     except httpx.RequestError:
         return Response(status_code=503, content="Service unavailable")
