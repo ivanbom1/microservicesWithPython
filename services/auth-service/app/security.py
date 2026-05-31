@@ -66,3 +66,4 @@ async def get_current_user(
         GET /v1/auth/me  →  should return your token's payload
     """
     raise NotImplementedError("implement get_current_user")
+#merge
