@@ -15,7 +15,7 @@ from app.database import get_db
 from app import service
 from app.schemas import GameCreate, GameOut, GameList
 
-router = APIRouter(prefix="/v1/game", tags=["game"])
+router = APIRouter(prefix="/v1/games", tags=["games"])
 
 @router.post("/", response_model=GameOut, status_code=201)
 def create_game(data: GameCreate):
