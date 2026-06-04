@@ -1,6 +1,7 @@
 import Database from "better-sqlite3";
+import path from "path";
 
-const db = new Database("notifications.db");
+const db = new Database(path.join(__dirname, "notifications.db"));
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS notifications (
@@ -11,4 +12,4 @@ db.exec(`
   )
 `);
 
-export default db;
+export default db;  

@@ -64,8 +64,8 @@ async def publish_activity_event(
         connection = await aio_pika.connect_robust(settings.rabbitmq_url)
         async with connection:
             channel = await connection.channel()
-            await channel.declare_queue(NOTIFICATIONS_QUEUE, durable=True)
             await channel.declare_queue(LOGS_QUEUE, durable=True)
+            await channel.declare_queue(NOTIFICATIONS_QUEUE, durable=True)
             await channel.default_exchange.publish(
                 aio_pika.Message(
                     body=notification_payload.encode(),
