@@ -89,8 +89,16 @@ curl http://localhost:8000/v1/notifications
 ## Discussion *(~15 min)*
 
 - What happens to the activity request if `notification-service` is down when the message is published? Should the activity creation fail?
+
+Activity still can be created. Notification log is a not mandatory service for activity request to succeed. Activity creates, RabbitMQ operates it.
+
 - In Module 3, you called `game-service` directly over HTTP to enrich the response. Why not do the same for notifications — why introduce a broker at all?
+
+Notifications are designed to be delivered without any response expected back to the publishing service. Broker usage makes this possible - instead of waiting for the notification service to be available, the broker holds the messages until the notification service is up and ready to consume them, then the notification service takes over and delivers them to the end user.
+
 - The activity is saved and the message is sent — but you have no confirmation the notification was delivered. What visibility do you lose compared to a synchronous call?
+
+With synchronous call you get an immediate response - success, failure or an error message. However with the broker, once you send the notification you have no information about it's state: was it processed without errors? did service received it? was the notification delivered to the user? The answer is - you will never know unless you build an extra observability layer.  
 
 ---
 
