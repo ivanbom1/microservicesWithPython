@@ -20,6 +20,8 @@ Think about what happens under load, or when notification-service is temporarily
 
 > *Your answer:*
 
+Activity service finishes its job instantly saving the activity and publishing the message. It doesn't slow down under load because notification delays don't affect it. Thus if notification-service is down, activity-service doesn't fail or need retry logic, it just publishes and moves on.
+
 ---
 
 ## 2. Your choice
@@ -32,6 +34,10 @@ Think about what happens if notification-service is slow, or crashes mid-message
 
 > *Your answer:*
 
+HTTP for notifications will lead to bonding notification service with the activity service and result in activity service slowdowns or fails if notification service crashes.
+
+Broker solves both, slowdowns and possible failure of activity service because of notifications. Activity never waits, notification service crash message is being held until the service is up again.
+
 ---
 
 ## 3. The tradeoff
@@ -43,6 +49,10 @@ With synchronous REST, you get an immediate answer: success or failure. With asy
 What visibility do you lose when you go async?
 
 > *Your answer:*
+
+Users simply never receive the notification. No error, no retry and no indication anything went wrong. They might assume the feature is broken, or never know at all :(
+
+As a developer, nothing in your logs shows a failure at the activity-service level (it published successfully and moved on). The failure is somewhere downstream, silent, unless you specifically built visibility into the notification-service (f.e. implement/integrate a monitoring tool).
 
 ---
 
