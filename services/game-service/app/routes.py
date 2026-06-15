@@ -44,5 +44,11 @@ def get_game(game_id: str):
 #
 # Module 5 — CQRS: also add this endpoint (declare it before /{game_id}):
 # - GET /v1/games/{game_id}/summary -> read from Redis cache (404 if not cached)
-#   from app.infrastructure.cache import get_game_summary
+from app.infrastructure.cache import get_game_summary
 
+@router.get("/{game_id}/summary")
+def game_summary(game_id: str):
+    data = get_game_summary(game_id)
+    if data is None:
+        raise HTTPException(status_code=404, detail="Summary not found in cache")
+    return data

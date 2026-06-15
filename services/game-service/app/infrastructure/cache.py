@@ -60,11 +60,19 @@ def get_game_summary(game_id: str) -> dict | None:
     (e.g. the game was added before Redis was running).
 
     Steps:
-    1. Get the Redis client with _get_client()
-    2. Fetch the raw value: r.get(_key(game_id))
-    3. If None → return None
-    4. Otherwise → return json.loads(raw)
-
+    1. Get the Redis client with _get_client() """
+    redis_client = _get_client()
+    """ 
+    2. Fetch the raw value: r.get(_key(game_id)) """
+    raw = redis_client.get(_key(game_id))
+    """
+    3. If None → return None """
+    if raw is None:
+        return None
+    """
+    4. Otherwise → return json.loads(raw) """
+    return json.loads(raw)
+    """
     Once implemented, add this endpoint to routes.py:
         GET /v1/games/{game_id}/summary
         → call get_game_summary(game_id)
