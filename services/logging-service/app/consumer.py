@@ -52,7 +52,7 @@ def _run(flask_app) -> None:
 
                 if not has_consent(user_id):
                     logger.info("[consumer] No consent for user %s — discarding", user_id)
-                    ch.basic_ack(delivery_tag=method.delivery_tag)
+                    #ch.basic_ack(delivery_tag=method.delivery_tag)
                     return
 
                 log = ActivityLog(

@@ -2,4 +2,4 @@ fastapi
 uvicorn[standard]
 httpx
 pydantic-settings
-python-jose[cryptography]
+python-jose[cryptography]==3.3.0

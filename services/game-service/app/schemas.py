@@ -10,6 +10,7 @@
 # - GameList    — paginated envelope: { items, total, limit, offset }
 
 from pydantic import BaseModel
+from typing import Optional
 from datetime import datetime
 
 class GameCreate(BaseModel):
@@ -24,7 +25,7 @@ class GameOut(BaseModel):
     title: str
     genre: str
     platform: str
-    release_year: int = None
+    release_year: Optional[int] = None
     cover_url: str = None
     created_at: datetime
 

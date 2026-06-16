@@ -26,6 +26,6 @@ class Game(Base):
     title = Column(String, unique=True, nullable=False)
     genre = Column(String, nullable=False)
     platform = Column(String, nullable=False)
-    release_year = Column(Integer, nullable=True)
+    release_year = Column(Integer, nullable=False)
     cover_url = Column(String, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
