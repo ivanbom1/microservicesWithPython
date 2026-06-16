@@ -11,6 +11,7 @@ import threading
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
+from datetime import datetime, timezone
 
 from app.models import ActivityLog, Consent, db
 
@@ -40,18 +41,24 @@ def health():
 
 @app.post("/v1/consent/<user_id>")
 def set_consent(user_id):
-    """
-    Record or update a user's GDPR consent decision.
-
-    Request body: { "granted": true }
-
-    Steps:
-    1. Parse request.get_json() to get "granted" (bool)
-    2. Look up or create a Consent row for user_id
-    3. Set granted and updated_at, then db.session.commit()
-    4. Return 200 with { "user_id", "granted", "updated_at" }
-    """
-    raise NotImplementedError
+    """1. Parse request.get_json() to get "granted" (bool)"""
+    data = request.get_json()
+    granted = data["granted"]
+    """2. Look up or create a Consent row for user_id"""
+    consent = Consent.query.filter_by(user_id=user_id).first()
+    if not consent:
+        consent = Consent(user_id=user_id)
+        db.session.add(consent)
+    """3. Set granted and updated_at, then db.session.commit()"""
+    consent.granted = granted
+    consent.updated_at = datetime.utcnow()
+    db.session.commit()
+    """ 4. Return 200 with { "user_id", "granted", "updated_at" }"""
+    return jsonify({
+        "user_id": user_id,
+        "granted": consent.granted,
+        "updated_at": consent.updated_at.isoformat()
+    }), 200
 
 
 @app.get("/v1/consent/<user_id>")
@@ -64,7 +71,18 @@ def get_consent(user_id):
     2. If not found → 404 with { "detail": "No consent record found" }
     3. Otherwise → 200 with { "user_id", "granted", "updated_at" }
     """
-    raise NotImplementedError
+    consent = Consent.query.filter_by(user_id=user_id).first()
+    if consent:
+        return jsonify({
+        "user_id": user_id,
+        "granted": consent.granted,
+        "updated_at": consent.updated_at.isoformat()
+    }), 200
+    else:
+        return jsonify({
+            "detail": "No consent record found"
+        }), 404
+
 
 
 @app.delete("/v1/consent/<user_id>")
@@ -77,7 +95,15 @@ def withdraw_consent(user_id):
     2. Set granted=False, update updated_at, commit
     3. Return 200 with { "user_id", "granted", "updated_at" }
     """
-    raise NotImplementedError
+    consent = Consent.query.filter_by(user_id=user_id).first()
+    if consent:
+        consent.granted = False
+        consent.updated_at = datetime.utcnow()
+        db.session.commit()
+    else:
+        return jsonify({
+            "detail": "No consent record found"
+        }), 404
 
 
 @app.delete("/v1/logs/<user_id>")
@@ -90,15 +116,34 @@ def delete_logs(user_id):
     2. Commit
     3. Return 200 with { "user_id", "deleted_entries": <count> }
     """
-    raise NotImplementedError
+    logs = ActivityLog.query.filter_by(user_id=user_id).delete()
+    db.session.commit()
+    if logs:
+        return jsonify({
+            "user_id": user_id,
+            "deleted_entries": logs
+        }), 200
+    else:
+        return jsonify({
+            "detail": "Activity logs are not found"
+        }), 404
 
 
 @app.get("/v1/logs/<user_id>")
 def get_logs(user_id):
-    """
-    List all stored log entries for a user (for testing/verification).
+    logs = ActivityLog.query.filter_by(user_id=user_id).all()
 
-    Returns: { "items": [...], "total": N }
-    Each item: { "id", "user_id", "game_id", "action", "message", "created_at" }
-    """
-    raise NotImplementedError
+    return jsonify({
+        "items": [
+            {
+                "id": log.id,
+                "user_id": log.user_id,
+                "game_id": log.game_id,
+                "action": log.action,
+                "message": log.message,
+                "created_at": log.created_at.isoformat() #serializes the datetime 
+            }
+            for log in logs
+        ],
+        "total": len(logs)
+    }), 200
