@@ -85,6 +85,7 @@ def get_consent(user_id):
 
 
 
+
 @app.delete("/v1/consent/<user_id>")
 def withdraw_consent(user_id):
     """
@@ -95,15 +96,18 @@ def withdraw_consent(user_id):
     2. Set granted=False, update updated_at, commit
     3. Return 200 with { "user_id", "granted", "updated_at" }
     """
-    consent = Consent.query.filter_by(user_id=user_id).first()
-    if consent:
-        consent.granted = False
-        consent.updated_at = datetime.utcnow()
-        db.session.commit()
-    else:
-        return jsonify({
-            "detail": "No consent record found"
-        }), 404
+    record = Consent.query.filter_by(user_id=user_id).first()
+    if record is None:
+        return jsonify({"detail": "No consent record found"}), 404
+
+    record.granted = False
+    record.updated_at = datetime.now(timezone.utc)
+    db.session.commit()
+    return jsonify({
+        "user_id": record.user_id,
+        "granted": record.granted,
+        "updated_at": record.updated_at.isoformat(),
+    })
 
 
 @app.delete("/v1/logs/<user_id>")
